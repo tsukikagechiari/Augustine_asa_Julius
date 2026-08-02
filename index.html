@@ -1,1 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>角色圖書館</title>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+body{
+  overflow:hidden;
+  font-family:sans-serif;
+}
 
+/* ========== 星空起始場景 ========== */
+#scene-start{
+  width:100vw;
+  height:100vh;
+  background:#000010;
+  position:relative;
+  transition: opacity 1.2s ease;
+}
+/* 星空粒子 */
+.star{
+  position:absolute;
+  background:#fff;
+  border-radius:50%;
+  animation: twinkle 3s infinite alternate;
+}
+@keyframes twinkle{
+  0%{opacity:0.2;}
+  100%{opacity:0.9;}
+}
+
+/* 懸浮書本 */
+.book{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:180px;
+  height:140px;
+  background:#443366;
+  border-radius:6px 12px 12px 6px;
+  cursor:pointer;
+  box-shadow: 0 0 30px #9977dd66;
+  /* 漂浮動畫 */
+  animation: float 4s ease-in-out infinite;
+  transition: all 0.3s;
+}
+.book::before{
+  content:"";
+  position:absolute;
+  left:8px;
+  top:0;
+  width:4px;
+  height:100%;
+  background:#221133;
+  border-radius:2px;
+}
+.book:hover{
+  box-shadow: 0 0 50px #bb99ff;
+  transform:translate(-50%,-50%) scale(1.05);
+}
+@keyframes float{
+  0%{transform:translate(-50%,-50%) translateY(0px);}
+  50%{transform:translate(-50%,-50%) translateY(-15px);}
+  100%{transform:translate(-50%,-50%) translateY(0px);}
+}
+/* 書本翻頁動畫 class */
+.book-flip{
+  animation: flipBook 1s ease-in forwards !important;
+}
+@keyframes flipBook{
+  0%{transform:translate(-50%,-50%) rotateY(0deg);}
+  100%{transform:translate(-50%,-50%) rotateY(160deg); opacity:0;}
+}
+
+/* 白色過渡遮罩 */
+.white-overlay{
+  position:fixed;
+  inset:0;
+  background:#ffffff;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 1s ease;
+  z-index:99;
+}
+.white-overlay.show{
+  opacity:1;
+  pointer-events:all;
+}
+
+/* ========== Live2D 角色場景 (預設隱藏) ========== */
+#scene-character{
+  width:100vw;
+  height:100vh;
+  background:#ffffff;
+  position:absolute;
+  top:0;
+  left:0;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 1s ease;
+}
+#scene-character.active{
+  opacity:1;
+  pointer-events:all;
+}
+/* Live2D畫布位置 */
+#live2d-canvas{
+  width:100%;
+  height:100%;
+}
+</style>
+</head>
+<body>
+
+<!-- 起始星空場景 -->
+<div id="scene-start">
+  <div class="book" id="book"></div>
+</div>
+
+<!-- 白色轉場遮罩 -->
+<div class="white-overlay" id="overlay"></div>
+
+<!-- Live2D角色場景 -->
+<div id="scene-character">
+  <canvas id="live2d-canvas"></canvas>
+</div>
+
+<script>
+// 自動生成星空
+const sceneStart = document.getElementById("scene-start");
+function createStar(count = 150){
+  for(let i=0; i<count; i++){
+    const star = document.createElement("div");
+    star.classList.add("star");
+    // 隨機位置、大小、閃爍延遲
+    const size = Math.random() * 2 + 0.5;
+    star.style.width = size+"px";
+    star.style.height = size+"px";
+    star.style.left = Math.random()*100 + "%";
+    star.style.top = Math.random()*100 + "%";
+    star.style.animationDelay = Math.random()*3+"s";
+    sceneStart.appendChild(star);
+  }
+}
+createStar();
+
+// 點擊書本流程控制
+const book = document.getElementById("book");
+const overlay = document.getElementById("overlay");
+const sceneStartEl = document.getElementById("scene-start");
+const charScene = document.getElementById("scene-character");
+
+let isClicking = false;
+book.addEventListener("click",()=>{
+  if(isClicking) return;
+  isClicking = true;
+
+  // 1. 書本執行翻頁動畫
+  book.classList.add("book-flip");
+
+  // 2. 延遲後喚起白色淡入
+  setTimeout(()=>{
+    overlay.classList.add("show");
+  },800);
+
+  // 3. 白色畫面維持片刻，切換角色場景
+  setTimeout(()=>{
+    sceneStartEl.style.opacity = "0";
+    // 白色遮罩維持一瞬間再淡出
+    setTimeout(()=>{
+      overlay.classList.remove("show");
+      charScene.classList.add("active");
+      // ===== 這裡之後放 Live2D 初始化程式 =====
+      initLive2D();
+    },400);
+  },1600);
+});
+
+// Live2D 預留函數，後續補程式
+function initLive2D(){
+  console.log("Live2D 開始載入");
+  // 之後引入 live2d widget 在此執行初始化
+}
+</script>
+
+</body>
+</html>
